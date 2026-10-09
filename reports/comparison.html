@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>DMoney transaction API comparison</title>
+  <style>
+    body { font-family: Segoe UI, sans-serif; margin: 32px; color: #0f172a; background: #f8fafc; }
+    h1 { margin-bottom: 4px; }
+    h2 { margin-top: 36px; }
+    .muted { color: #475569; }
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    th, td { border: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; }
+    th { background: #0f172a; color: #fff; }
+    .path { color: #64748b; font-size: 12px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; margin: 16px 0; }
+    .bar-row { display: grid; grid-template-columns: 140px 1fr 110px; gap: 12px; align-items: center; margin: 8px 0; }
+    .track { background: #e2e8f0; border-radius: 999px; height: 14px; }
+    .fill { background: #4f46e5; height: 14px; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <h1>DMoney transaction API comparison</h1>
+  <p class="muted">Deposit, Send Money, and Payment over a 120-second test. Each activity keeps one virtual user running for its 30-second window. Amount: 10 Tk.</p>
+  <div class="card">
+    <strong>Fastest API by p(95):</strong> Deposit
+    <p>Payment p(95) increased from 18.54 ms in 0-30s (2 concurrent activities) to 76.42 ms in 90-120s (4 concurrent activities), a change of 57.88 ms. Concurrent activities step from 2 → 3 → 4 → 4 across the four windows.</p>
+  </div>
+  <h2>Response time, throughput, and failure rate</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>API</th><th>Requests</th><th>Throughput</th><th>Avg</th><th>Median</th>
+        <th>p(95)</th><th>p(99)</th><th>Failure rate</th><th>Checks passed</th>
+      </tr>
+    </thead>
+    <tbody><tr>
+        <td>Deposit<div class="path">/transaction/deposit</div></td>
+        <td>3</td>
+        <td>0.05 req/s</td>
+        <td>50.95 ms</td>
+        <td>40.18 ms</td>
+        <td>76.65 ms</td>
+        <td>79.89 ms</td>
+        <td>0.00%</td>
+        <td>100.00%</td>
+      </tr><tr>
+        <td>Send Money<div class="path">/transaction/sendmoney</div></td>
+        <td>3</td>
+        <td>0.03 req/s</td>
+        <td>58.73 ms</td>
+        <td>59.53 ms</td>
+        <td>91.07 ms</td>
+        <td>93.88 ms</td>
+        <td>0.00%</td>
+        <td>100.00%</td>
+      </tr><tr>
+        <td>Payment<div class="path">/transaction/payment</div></td>
+        <td>7</td>
+        <td>0.06 req/s</td>
+        <td>60.68 ms</td>
+        <td>60.62 ms</td>
+        <td>85.63 ms</td>
+        <td>88.49 ms</td>
+        <td>0.00%</td>
+        <td>100.00%</td>
+      </tr></tbody>
+  </table>
+  <h2>p(95) response time</h2>
+  <div class="card"><div class="bar-row">
+        <span>Deposit</span>
+        <div class="track"><div class="fill" style="width:84.16371642450194%"></div></div>
+        <strong>76.65 ms</strong>
+      </div><div class="bar-row">
+        <span>Send Money</span>
+        <div class="track"><div class="fill" style="width:100%"></div></div>
+        <strong>91.07 ms</strong>
+      </div><div class="bar-row">
+        <span>Payment</span>
+        <div class="track"><div class="fill" style="width:94.02620706648239%"></div></div>
+        <strong>85.63 ms</strong>
+      </div></div>
+  <h2>How latency moved as the workload changed</h2>
+  <p class="muted">Throughput above is requests divided by the seconds that API was scheduled to run, not the full test clock.</p>
+  <table>
+    <thead>
+      <tr><th>Window</th><th>API</th><th>Requests</th><th>Avg</th><th>p(95)</th><th>Max</th></tr>
+    </thead>
+    <tbody><tr>
+        <td>0-30s</td>
+        <td>Send Money</td>
+        <td>1</td>
+        <td>22.10 ms</td>
+        <td>22.10 ms</td>
+        <td>22.10 ms</td>
+      </tr><tr>
+        <td>0-30s</td>
+        <td>Payment</td>
+        <td>1</td>
+        <td>18.54 ms</td>
+        <td>18.54 ms</td>
+        <td>18.54 ms</td>
+      </tr><tr>
+        <td>30-60s</td>
+        <td>Deposit</td>
+        <td>1</td>
+        <td>80.70 ms</td>
+        <td>80.70 ms</td>
+        <td>80.70 ms</td>
+      </tr><tr>
+        <td>30-60s</td>
+        <td>Send Money</td>
+        <td>1</td>
+        <td>94.58 ms</td>
+        <td>94.58 ms</td>
+        <td>94.58 ms</td>
+      </tr><tr>
+        <td>30-60s</td>
+        <td>Payment</td>
+        <td>1</td>
+        <td>89.21 ms</td>
+        <td>89.21 ms</td>
+        <td>89.21 ms</td>
+      </tr><tr>
+        <td>60-90s</td>
+        <td>Deposit</td>
+        <td>2</td>
+        <td>36.08 ms</td>
+        <td>39.77 ms</td>
+        <td>40.18 ms</td>
+      </tr><tr>
+        <td>60-90s</td>
+        <td>Send Money</td>
+        <td>1</td>
+        <td>59.53 ms</td>
+        <td>59.53 ms</td>
+        <td>59.53 ms</td>
+      </tr><tr>
+        <td>60-90s</td>
+        <td>Payment</td>
+        <td>1</td>
+        <td>53.31 ms</td>
+        <td>53.31 ms</td>
+        <td>53.31 ms</td>
+      </tr><tr>
+        <td>90-120s</td>
+        <td>Payment</td>
+        <td>4</td>
+        <td>65.92 ms</td>
+        <td>76.42 ms</td>
+        <td>77.29 ms</td>
+      </tr></tbody>
+  </table>
+</body>
+</html>
