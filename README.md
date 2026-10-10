@@ -1,111 +1,183 @@
-# DMoney Performance Testing with k6
+# DMoney Performance Testing with K6 🚀
 
-Two-minute k6 load test of the DMoney transaction APIs. Each of the six users logs in with their own credentials. Activities that share a time window run at the same time and stay active for that whole window.
+DMoney Performance Testing is a JavaScript-based performance test suite built with **k6**. It simulates six DMoney users (2 Agents, 2 Customers, 2 Merchants) performing **Deposit**, **Send Money** and **Payment** transactions concurrently for **2 minutes**, and compares the three APIs on response time, throughput, failure rate and performance degradation.
 
-## Transaction flow
+## 🎯 Purpose
+
+- Simulate a realistic 4-window transaction flow where activities in the same window run **concurrently and continuously** for the whole window
+- Authenticate every user with **their own credentials**
+- Validate every transaction response with k6 **checks**
+- Enforce global and **per-API thresholds** (Deposit, Send Money, Payment)
+- Observe how latency changes as the concurrent workload grows
+
+---
+
+## 🔗 System Under Test
+
+- **DMoney API:** `http://localhost:5000`
+  - `POST /transaction/deposit`
+  - `POST /transaction/sendmoney`
+  - `POST /transaction/payment`
+
+---
+
+## ✅ What Gets Tested
 
 | Window | Concurrent activities |
-| --- | --- |
-| 0–30s | Customer 1 sends money to Customer 2. Customer 2 pays Merchant 1. |
-| 30–60s | Customer 2 sends money to Customer 1. Agent 1 deposits to Customer 2. Customer 1 pays Merchant 1. |
-| 60–90s | Agent 1 deposits to Customer 1. Agent 2 deposits to Customer 2. Customer 1 sends money to Customer 2. Customer 2 pays Merchant 2. |
-| 90–120s | Agent 1 pays Merchant 1. Agent 2 pays Merchant 2. Customer 1 pays Merchant 1. Customer 2 pays Merchant 2. |
+| ------ | --------------------- |
+| 0–30s | Customer 1 → Send Money → Customer 2 · Customer 2 → Payment → Merchant 1 |
+| 30–60s | Customer 2 → Send Money → Customer 1 · Agent 1 → Deposit → Customer 2 · Customer 1 → Payment → Merchant 1 |
+| 60–90s | Agent 1 → Deposit → Customer 1 · Agent 2 → Deposit → Customer 2 · Customer 1 → Send Money → Customer 2 · Customer 2 → Payment → Merchant 2 |
+| 90–120s | Agent 1 → Payment → Merchant 1 · Agent 2 → Payment → Merchant 2 · Customer 1 → Payment → Merchant 1 · Customer 2 → Payment → Merchant 2 |
 
-APIs under test:
+Each activity is one k6 scenario (`constant-vus`, 1 VU) that sends a request every second for its whole window.
 
-- `POST /transaction/deposit`
-- `POST /transaction/sendmoney`
-- `POST /transaction/payment`
+---
 
-## Checks and thresholds
+## ✨ Features
+
+- One k6 scenario per activity, started with `startTime` so each window begins on time
+- Per-user login (with OTP read through a small local bridge)
+- Tags per API (`api`) and per window (`phase`) with matching thresholds
+- Console logging of every transaction and its response time
+- Auto-generated **HTML report** (`k6-reporter`) and a custom **API comparison report**
+
+---
+
+## 🛠️ Technologies Used
+
+- [k6](https://k6.io/) (Grafana k6)
+- JavaScript (ES6) · Node.js (OTP bridge)
+- [k6-reporter](https://github.com/benc-uk/k6-reporter)
+
+---
+
+## 📁 Project Structure
+
+```
+dMoney-Performance-Testing-with-K6/
+├── dMoneyTest.js            # k6 test: setup, 4 windows, checks, thresholds
+├── otpBridge.js             # Reads OTP codes from the API log
+├── reports/
+│   ├── dMoneyReport.html        # k6 HTML report
+│   └── dMoneyComparison.html    # API comparison report
+├── screenshots/
+│   ├── k6-html-report.png
+│   └── api-metrics.png
+└── .gitignore
+```
+
+---
+
+## ⚙️ Local Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/tash-9/dMoney-Performance-Testing-with-K6
+cd dMoney-Performance-Testing-with-K6
+```
+
+2. Install k6: https://k6.io/docs/get-started/installation/
+
+3. Install Node.js (needed for the OTP bridge).
+
+---
+
+## ▶️ Running the Test
+
+1. Start the DMoney API with its log written to `logs/api.log`:
+
+```bash
+mkdir logs
+node server.js > logs/api.log 2>&1
+```
+
+2. Start the OTP bridge:
+
+```bash
+OTP_LOG=logs/api.log node otpBridge.js
+```
+(PowerShell: `$env:OTP_LOG = "logs\api.log"; node otpBridge.js`)
+
+3. Run the test:
+
+```bash
+k6 run dMoneyTest.js
+```
+
+| Variable | Default | Purpose |
+| -------- | ------- | ------- |
+| `BASE_URL` | `http://localhost:5000` | DMoney API |
+| `AMOUNT` | `10` | Amount of each transaction |
+| `CUSTOMER_FUND` | `2000` | Opening balance given to each customer |
+
+Setup (not measured) creates and activates the 6 users, logs each in, funds both agents from `SYSTEM`, and deposits to both customers. The measured 2 minutes start after that.
+
+---
+
+## 📊 Validations (Checks)
 
 Every transaction response is checked for:
 
-- HTTP status `201`
-- a successful transaction
-- a returned transaction id (`trnxId`)
-- the expected success message (`Deposit successful`, `Send money successful`, or `Payment successful`)
+- HTTP status is **201**
+- Transaction request is **successful**
+- **Transaction ID** (`trnxId`) is returned
+- Expected **success message** (`Deposit successful` / `Send money successful` / `Payment successful`)
 
-Thresholds, including separate ones for Deposit, Send Money, and Payment:
+## 🚦 Thresholds
 
-- failed request rate under 1%
-- p(95) response time under 1000 ms
-- transaction checks passing at least 99% of the time
+| Scope | Failed rate | p(95) | Checks |
+| ----- | ----------- | ----- | ------ |
+| All transactions | < 1% | < 1000ms | > 99% |
+| Deposit | < 1% | < 1000ms | > 99% |
+| Send Money | < 1% | < 1000ms | > 99% |
+| Payment | < 1% | < 1000ms | > 99% |
 
-## How to run
+---
 
-Requirements: [k6](https://k6.io/), Node.js, and the DMoney API on `http://localhost:5000`.
+## 📈 Results
 
-The API prints a one-time password to its log for Agent, Customer, and Merchant logins. Start the API with its log written to `logs/api.log`, then start the small bridge that reads those codes:
-
-```powershell
-mkdir logs -Force
-# from the DMoney API project
-node server.js > D:\SDET\B-19\K6\dMoney-Performance-Testing-with-K6\logs\api.log 2>&1
-
-# from this project
-$env:OTP_LOG = "D:\SDET\B-19\K6\dMoney-Performance-Testing-with-K6\logs\api.log"
-node scripts/otp-bridge.js
-```
-
-In another terminal:
-
-```powershell
-k6 run tests/dmoney-transactions.js
-```
-
-Useful environment variables:
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `BASE_URL` | `http://localhost:5000` | DMoney API |
-| `SECRET_KEY` | `ROADTOSDET` | `X-AUTH-SECRET-KEY` |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | `admin@dmoney.com` / `1234` | Creates and activates the six users |
-| `SYSTEM_EMAIL` / `SYSTEM_PASSWORD` | `system@dmoney.com` / `1234` | Funds the agents before the test |
-| `EMAIL_LOCAL` | `tashfia.islam102938` | Gmail local-part used for the new users |
-| `OTP_BRIDGE` | `http://127.0.0.1:5055` | Local OTP reader |
-| `AMOUNT` | `10` | Amount of each measured transaction |
-
-Setup creates Agent 1, Agent 2, Customer 1, Customer 2, Merchant 1, and Merchant 2, activates them, logs each one in, funds both agents from `SYSTEM`, and deposits to both customers. The measured two minutes start after that.
-
-k6 writes:
-
-- `reports/summary.html` — HTML report
-- `reports/comparison.html` — API comparison
-
-## Results
-
-The run on 9 October 2026 passed every threshold. Failed requests: **0%**. Transaction checks: **100%**. Overall transaction p(95): **91.35 ms**.
+Overall: failed requests **‹0%›**, checks **‹100%›**, transaction p(95) **‹x ms›**. All thresholds ‹passed›.
 
 | API | Requests | Throughput | Avg | Median | p(95) | p(99) | Failure rate | Checks |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Deposit | 3 | 0.05 req/s | 50.95 ms | 40.18 ms | 76.65 ms | 79.89 ms | 0.00% | 100% |
-| Send Money | 3 | 0.03 req/s | 58.73 ms | 59.53 ms | 91.07 ms | 93.88 ms | 0.00% | 100% |
-| Payment | 7 | 0.06 req/s | 60.68 ms | 60.62 ms | 85.63 ms | 88.49 ms | 0.00% | 100% |
+| --- | -------- | ---------- | --- | ------ | ----- | ----- | ------------ | ------ |
+| Deposit | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › |
+| Send Money | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › |
+| Payment | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › |
 
-Throughput is requests divided by the seconds that API was scheduled (Deposit 60s, Send Money 90s, Payment 120s).
+### Performance degradation as workload changes
 
-Deposit was the fastest API by p(95). Send Money was the slowest, still well under 1000 ms.
+| Window | Concurrent activities | Deposit p(95) | Send Money p(95) | Payment p(95) |
+| ------ | --------------------- | ------------- | ---------------- | ------------- |
+| 0–30s | 2 | – | ‹ › | ‹ › |
+| 30–60s | 3 | ‹ › | ‹ › | ‹ › |
+| 60–90s | 4 | ‹ › | ‹ › | ‹ › |
+| 90–120s | 4 | – | – | ‹ › |
 
-Payment ran in every window, so it shows how latency moved as the workload grew from 2 concurrent activities to 4:
+‹Write 2–3 lines: which API was fastest/slowest, whether latency rose as concurrency grew from 2 to 4, any failures.›
 
-| Window | Concurrent activities | Payment p(95) |
-| --- | --- | --- |
-| 0–30s | 2 | 18.54 ms |
-| 30–60s | 3 | 89.21 ms |
-| 60–90s | 4 | 53.31 ms |
-| 90–120s | 4 | 76.42 ms |
+### HTML Report
 
-Payment p(95) rose by about 58 ms from the first window to the last. The highest payment sample was in the 30–60s window, when a deposit, a send, and a payment were in flight together. Latency moved around as the mix of APIs changed. It did not climb in a straight line, and no window came close to the 1000 ms threshold. There was no increase in failures.
+<img width="600" alt="k6 HTML report" src="screenshots/k6-html-report.png" />
 
-## HTML report
+Full report: [reports/dMoneyReport.html](reports/dMoneyReport.html)
 
-![k6 HTML report](screenshots/k6-html-report.png)
+### Metrics
 
-Full report: [reports/summary.html](reports/summary.html)
+<img width="600" alt="API comparison metrics" src="screenshots/api-metrics.png" />
 
-## Metrics
+Window-by-window numbers: [reports/dMoneyComparison.html](reports/dMoneyComparison.html)
 
-![API comparison metrics](screenshots/api-metrics.png)
+---
 
-Window-by-window numbers: [reports/comparison.html](reports/comparison.html)
+## 📝 Notes
+
+- Activities in the same window run as parallel scenarios and keep sending requests (1 request/second per user) until the window ends.
+- Throughput is requests divided by the seconds that API was scheduled to run.
+- The OTP bridge is needed because Agent, Customer and Merchant logins require an OTP printed in the API log.
+
+---
+
+## ✍️ Author
+Tasfia Islam Raisha
