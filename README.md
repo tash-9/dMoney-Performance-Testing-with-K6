@@ -161,13 +161,13 @@ Overall: failed requests **‹0%›**, checks **‹100%›**, transaction p(95) 
 
 <img width="600" alt="k6 HTML report" src="screenshots/k6-html-report.png" />
 
-Full report: [reports/dMoneyReport.html](reports/dMoneyReport.html)
+Full report: [reports/dMoneyReport.html](https://htmlpreview.github.io/?https://github.com/tash-9/dMoney-Performance-Testing-with-K6/blob/main/reports/summary.html)
 
 ### Metrics
 
 <img width="600" alt="API comparison metrics" src="screenshots/api-metrics.png" />
 
-Window-by-window numbers: [reports/dMoneyComparison.html](reports/dMoneyComparison.html)
+Window-by-window numbers: [reports/dMoneyComparison.html](https://htmlpreview.github.io/?https://github.com/tash-9/dMoney-Performance-Testing-with-K6/blob/main/reports/comparison.html)
 
 ---
 
