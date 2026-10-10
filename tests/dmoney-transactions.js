@@ -59,6 +59,8 @@ const API_MESSAGE = {
   payment: 'Payment successful',
 };
 
+const API_LABEL = { deposit: 'Deposit', sendmoney: 'Send Money', payment: 'Payment' };
+
 const ACTIVE_SECONDS = {
   deposit: windowSec * 2,
   sendmoney: windowSec * 3,
@@ -285,7 +287,7 @@ function runTxn(data, api, fromKey, toKey, phase) {
   );
 
   txnDuration.add(res.timings.duration, { api, phase });
-
+  console.log(`[${API_LABEL[api]}] ${from.name} -> ${to.name} | ${phase} | status ${res.status} | ${res.timings.duration.toFixed(2)} ms`);
   check(
     res,
     {
@@ -299,8 +301,7 @@ function runTxn(data, api, fromKey, toKey, phase) {
     },
     { flow: 'transaction', api, phase }
   );
-
-  sleep(windowSec);
+  sleep(1);
 }
 
 export function w1SendC1C2(data) {
