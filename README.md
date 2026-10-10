@@ -138,25 +138,6 @@ Every transaction response is checked for:
 
 ## 📈 Results
 
-Overall: failed requests **‹0%›**, checks **‹100%›**, transaction p(95) **‹x ms›**. All thresholds ‹passed›.
-
-| API | Requests | Throughput | Avg | Median | p(95) | p(99) | Failure rate | Checks |
-| --- | -------- | ---------- | --- | ------ | ----- | ----- | ------------ | ------ |
-| Deposit | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › |
-| Send Money | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › |
-| Payment | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › | ‹ › |
-
-### Performance degradation as workload changes
-
-| Window | Concurrent activities | Deposit p(95) | Send Money p(95) | Payment p(95) |
-| ------ | --------------------- | ------------- | ---------------- | ------------- |
-| 0–30s | 2 | – | ‹ › | ‹ › |
-| 30–60s | 3 | ‹ › | ‹ › | ‹ › |
-| 60–90s | 4 | ‹ › | ‹ › | ‹ › |
-| 90–120s | 4 | – | – | ‹ › |
-
-‹Write 2–3 lines: which API was fastest/slowest, whether latency rose as concurrency grew from 2 to 4, any failures.›
-
 ### HTML Report
 
 <img width="600" alt="k6 HTML report" src="screenshots/k6-html-report.png" />
